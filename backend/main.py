@@ -31,6 +31,7 @@ app.add_middleware(
         "http://localhost:3002",
         "http://localhost:5173",
         "https://*.vercel.app",  # Vercel preview deployments
+        "https://crisisline-demo-ijrzkxafm-daijuns-projects-0957a011.vercel.app",  # Current deployment
         "https://empathz-demo.vercel.app"  # Production domain
     ],
     allow_credentials=True,
