@@ -1,5 +1,5 @@
 {
-  "name": "empathz-demo",
+  "name": "crisisline-demo",
   "version": "1.0.0",
   "description": "EmpathZ AI Coordinator - Crisis Hotline Call Analysis",
   "scripts": {
@@ -15,4 +15,3 @@
     "node": ">=18.0.0"
   }
 }
-
