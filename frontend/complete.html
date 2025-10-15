@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmpathZ AI Coordinator - Complete Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+        .font-inter { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 font-inter">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Complete dataset - all 10 calls with full data
+        const completeData = {
+            calls: [
+                {
+                    call_id: "CALL-2025-001",
+                    started_at: "2025-10-15T09:15:00-07:00",
+                    ended_at: "2025-10-15T09:47:00-07:00",
+                    duration_sec: 1920,
+                    channel: "phone",
+                    language: "en",
+                    timezone: "America/Los_Angeles",
+                    caller_profile: {
+                        age_range: "65-70",
+                        gender: "female",
+                        notes: "Recently widowed, lives alone"
+                    },
+                    turns: [
+                        { speaker: "responder", text: "Crisis hotline, this is Sarah. I'm here to listen. How can I help you today?" },
+                        { speaker: "caller", text: "Hello... I don't know if I should be calling this number. I feel so alone." },
+                        { speaker: "responder", text: "You absolutely should be calling. You're not alone, and I'm glad you reached out. Can you tell me what's going on?" },
+                        { speaker: "caller", text: "My husband passed away six months ago. We were married for 45 years. I just... I don't know how to do this life without him." },
+                        { speaker: "responder", text: "I'm so sorry for your loss. Losing a partner after 45 years must feel unbearable. That's such a long time to build a life together." },
+                        { speaker: "caller", text: "It does. Everything reminds me of him. I can't cook because he was the cook. I can't sleep in our bed because it's too empty. My children try to help, but they have their own lives." },
+                        { speaker: "responder", text: "Grief can feel so overwhelming, especially when it touches every part of your daily routine. What you're experiencing sounds very normal for someone who lost their life partner." },
+                        { speaker: "caller", text: "Sometimes I think it would be easier if I just... if I wasn't here anymore. I'm not saying I would do anything, but the thought crosses my mind." },
+                        { speaker: "responder", text: "I'm glad you shared that with me. Those thoughts are common when grief feels overwhelming. Can you tell me more about what makes you feel like you want to keep going?" },
+                        { speaker: "caller", text: "My grandchildren. They're the only thing that makes me smile anymore. But they live far away, and I only see them on video calls." },
+                        { speaker: "responder", text: "Your grandchildren sound like they bring you joy. That connection to the future, to love continuing - that's so important. Have you considered reaching out to grief support groups in your area?" },
+                        { speaker: "caller", text: "I've thought about it, but I'm not good with groups. I'm shy around strangers." },
+                        { speaker: "responder", text: "That's completely understandable. There are other options too - one-on-one counseling, online support, or even just calling us here when you need someone to listen. You don't have to go through this alone." },
+                        { speaker: "caller", text: "You're so kind. Just talking to you right now helps. I haven't talked about him much since he died." },
+                        { speaker: "responder", text: "Talking about your husband, sharing your memories and your pain - that's part of healing. His memory lives on through you and through your children and grandchildren." },
+                        { speaker: "caller", text: "I have this photo album I've been meaning to look through, but I've been too afraid. Maybe I should try that." },
+                        { speaker: "responder", text: "That sounds like a beautiful way to honor his memory. You could start small - maybe just one photo at a time. And remember, it's okay to cry while you do it." },
+                        { speaker: "caller", text: "Thank you for saying that. I always feel like I should be stronger, but maybe it's okay to not be strong all the time." },
+                        { speaker: "responder", text: "Absolutely. Grief isn't about being strong - it's about feeling your feelings and taking it one day at a time. You're already being incredibly brave by reaching out today." },
+                        { speaker: "caller", text: "I'm glad I called. I was worried you'd think I was being silly." },
+                        { speaker: "responder", text: "Not at all. What you're going through is real and valid. Before we end our call, I want to make sure you have some resources. Do you have a local crisis center or grief counselor you could contact?" },
+                        { speaker: "caller", text: "I have the number for a grief counselor my doctor recommended, but I haven't called yet." },
+                        { speaker: "responder", text: "Would you be willing to make that call this week? I can help you think through what you might want to say." },
+                        { speaker: "caller", text: "Yes, I think I could do that. Maybe I'll call tomorrow." },
+                        { speaker: "responder", text: "That sounds like a good plan. And remember, you can always call us back here if you need to talk. We're available 24/7." },
+                        { speaker: "caller", text: "Thank you so much. You've helped me more than you know." },
+                        { speaker: "responder", text: "I'm so glad we could talk today. Take care of yourself, and remember - you're not alone in this." }
+                    ],
+                    summary: {
+                        sections: {
+                            caller_profile: "70-year-old widowed female, recently lost husband of 45 years, lives alone, has adult children and grandchildren but limited local support",
+                            presenting_problem: "Overwhelming grief and loneliness following spouse's death 6 months ago, with passive suicidal ideation but no active plan or intent",
+                            context_timeline: "Husband passed away 6 months ago after 45-year marriage. Caller struggling with daily routines, sleep, and social isolation. Children live far away, limited local support network",
+                            risk_factors: "Recent loss of primary attachment figure, social isolation, disruption of daily routines, passive suicidal ideation, lack of grief support resources",
+                            protective_factors: "Strong connection to grandchildren, willingness to reach out for help, established relationship with healthcare provider, no history of mental health issues or substance use",
+                            interventions: "Active listening, validation of grief experience, psychoeducation about normal grief responses, exploration of protective factors, referral to grief counselor, safety planning around suicidal thoughts",
+                            outcome: "Caller expressed relief and gratitude, committed to contacting grief counselor, agreed to use crisis line for ongoing support, demonstrated improved mood and hope by end of call",
+                            safety_plan: "Caller agreed to contact grief counselor within one week, will use crisis line for ongoing support, identified photo album as positive memory activity, committed to reaching out if suicidal thoughts intensify"
+                        },
+                        tone: "empathetic_professional"
+                    },
+                    risk: {
+                        suicide: { score: 1, reason_quotes: ["Sometimes I think it would be easier if I just... if I wasn't here anymore. I'm not saying I would do anything, but the thought crosses my mind."], explanation: "Caller expressed passive suicidal ideation but explicitly stated no intent or plan. Thoughts appear to be grief-related and transient." },
+                        homicide: { score: 0, reason_quotes: [], explanation: "No indicators of homicidal ideation or intent. Caller expressed only internal distress and grief." },
+                        self_harm: { score: 0, reason_quotes: [], explanation: "No evidence of self-harm behaviors or ideation. Caller's distress appears to be emotional rather than behavioral." },
+                        harm_others: { score: 0, reason_quotes: [], explanation: "No indicators of intent or risk to harm others. Caller expressed only grief and loneliness." }
+                    },
+                    analytics: { response_time_sec: 45, handled_by: "Agent Sarah" }
+                },
+                {
+                    call_id: "CALL-2025-002",
+                    started_at: "2025-10-15T14:30:00-07:00",
+                    ended_at: "2025-10-15T15:22:00-07:00",
+                    duration_sec: 3120,
+                    channel: "phone",
+                    language: "en",
+                    timezone: "America/Los_Angeles",
+                    caller_profile: {
+                        age_range: "16-17",
+                        gender: "male",
+                        notes: "High school student, recent breakup"
+                    },
+                    turns: [
+                        { speaker: "responder", text: "Crisis hotline, this is Michael. I'm here to help. What's going on?" },
+                        { speaker: "caller", text: "I don't know what to do. I think I want to die." },
+                        { speaker: "responder", text: "I'm really glad you called and told me that. You're not alone right now. Can you tell me what's making you feel this way?" },
+                        { speaker: "caller", text: "My girlfriend broke up with me yesterday. We were together for two years. She said she doesn't love me anymore and she's already dating someone else." },
+                        { speaker: "responder", text: "That sounds incredibly painful. A two-year relationship ending so suddenly must feel devastating, especially at your age." },
+                        { speaker: "caller", text: "I can't stop thinking about it. I can't eat, I can't sleep. I keep seeing them together in my head. I have a bottle of pills in my room..." },
+                        { speaker: "responder", text: "I'm really concerned about you right now. You mentioned pills - are you thinking about taking them?" },
+                        { speaker: "caller", text: "Yes. I don't want to feel this pain anymore. I've been researching how many to take. I know exactly what to do." },
+                        { speaker: "responder", text: "I'm so glad you called before doing anything. That pain you're feeling is real, but it won't last forever. Can you tell me - do you have the pills with you right now?" },
+                        { speaker: "caller", text: "Yes, they're right here on my desk. I've been looking at them for hours." },
+                        { speaker: "responder", text: "I need you to do something for me right now. Can you put those pills away somewhere safe, maybe in a drawer or give them to a family member?" },
+                        { speaker: "caller", text: "I don't know... I don't want to feel like this anymore." },
+                        { speaker: "responder", text: "I understand you're in a lot of pain right now. But ending your life is permanent, and this pain is temporary. Can you tell me about other people in your life who care about you?" },
+                        { speaker: "caller", text: "My parents, I guess. But they don't understand. They just say I'll get over it. My friends are all busy with their own stuff." },
+                        { speaker: "responder", text: "It sounds like you're feeling really isolated right now. That must make everything feel even worse. Can you tell me more about your parents? Do they know you're struggling?" },
+                        { speaker: "caller", text: "No, I haven't told them. They'll just be disappointed in me. I'm supposed to be strong." },
+                        { speaker: "responder", text: "Reaching out for help when you're hurting isn't weak - it's actually really brave. You showed that by calling me today. I think your parents would want to know you're struggling so they can help." },
+                        { speaker: "caller", text: "Maybe... but what if they don't understand? What if they think I'm overreacting?" },
+                        { speaker: "responder", text: "The pain you're feeling is real and valid. A breakup, especially after two years, is a significant loss. It's okay to not be okay. Can you promise me you'll talk to your parents tonight?" },
+                        { speaker: "caller", text: "I don't know if I can. What if they don't believe me?" },
+                        { speaker: "responder", text: "What if they do? What if they've been waiting for you to reach out? Parents often want to help but don't know how. Can you start by just telling them you're having a really hard time?" },
+                        { speaker: "caller", text: "Okay, maybe I can try that. But what about the pills? I keep thinking about them." },
+                        { speaker: "responder", text: "I'm really concerned about those pills being accessible to you right now. Can you put them somewhere safe, or better yet, give them to your parents to hold onto?" },
+                        { speaker: "caller", text: "I guess I could give them to my mom. She has a locked medicine cabinet." },
+                        { speaker: "responder", text: "That sounds like a really good plan. And when you give them to her, that's also a good time to tell her you're struggling. She'll probably be relieved you're talking to her." },
+                        { speaker: "caller", text: "What if she gets mad or doesn't take me seriously?" },
+                        { speaker: "responder", text: "If she gets upset, it's probably because she's worried about you, not because she's mad at you. Parents often feel scared when their child is in pain. But most parents want to help if they can." },
+                        { speaker: "caller", text: "I hope so. I don't want to feel like this anymore." },
+                        { speaker: "responder", text: "I know this feels unbearable right now, but feelings change. Even the most intense pain gets easier to bear over time. You've already shown incredible strength by calling today." },
+                        { speaker: "caller", text: "Do you really think I can get through this?" },
+                        { speaker: "responder", text: "I do. You're already taking the first steps by reaching out for help. That takes courage. Can you tell me what you're going to do when we hang up?" },
+                        { speaker: "caller", text: "Give the pills to my mom and tell her I'm having a hard time. And maybe try to eat something." },
+                        { speaker: "responder", text: "That sounds like a really good plan. And remember, if you start feeling like hurting yourself again, you can always call us back. We're here 24/7." },
+                        { speaker: "caller", text: "Thank you. I'm scared, but I think I can do this." },
+                        { speaker: "responder", text: "Being scared is normal when you're going through something this hard. But you're not alone. You have people who care about you, and you have resources like us. You've got this." },
+                        { speaker: "caller", text: "Thank you for talking to me. I think I would have done something stupid if I hadn't called." },
+                        { speaker: "responder", text: "I'm so glad you called. You made the right choice. Take care of yourself, and remember - this pain is temporary, but your life has value beyond this moment." }
+                    ],
+                    summary: {
+                        sections: {
+                            caller_profile: "16-year-old male high school student experiencing acute crisis following recent breakup with girlfriend of 2 years",
+                            presenting_problem: "Active suicidal ideation with specific plan involving prescription pills, immediate access to means, following devastating breakup",
+                            context_timeline: "Girlfriend broke up yesterday after 2-year relationship, caller discovered she is already dating someone else. Has been researching lethal doses and has pills readily available",
+                            risk_factors: "Active suicidal ideation with specific plan, access to lethal means, acute emotional distress, social isolation, perceived lack of parental support, recent significant loss",
+                            protective_factors: "Intact family system, willingness to call crisis line, ability to engage in safety planning, no prior suicide attempts, strong connection to parents despite perceived barriers",
+                            interventions: "Immediate safety planning including removal of lethal means, engagement of family support system, validation of emotional pain, crisis intervention techniques, referral for ongoing mental health support",
+                            outcome: "Caller agreed to safety plan including giving pills to parent and disclosing distress to family. Committed to ongoing support and demonstrated decreased immediate risk by end of call",
+                            safety_plan: "Immediate: Remove pills from easy access by giving to parent. Short-term: Disclose emotional distress to parents, establish family support system. Long-term: Connect with mental health resources for ongoing support"
+                        },
+                        tone: "empathetic_professional"
+                    },
+                    risk: {
+                        suicide: { score: 4, reason_quotes: ["I think I want to die.", "I have a bottle of pills in my room... I don't want to feel this pain anymore. I've been researching how many to take. I know exactly what to do.", "Yes, they're right here on my desk. I've been looking at them for hours."], explanation: "Caller expressed active suicidal ideation with specific plan involving prescription pills. Has immediate access to lethal means and has researched lethal doses. Risk level elevated due to plan specificity and means access." },
+                        homicide: { score: 0, reason_quotes: [], explanation: "No indicators of homicidal ideation or intent. Caller's distress is focused internally and on relationship loss." },
+                        self_harm: { score: 2, reason_quotes: ["I can't eat, I can't sleep. I keep seeing them together in my head."], explanation: "Evidence of self-neglect behaviors (not eating, sleeping) but no evidence of direct self-harm behaviors or ideation beyond suicidal thoughts." },
+                        harm_others: { score: 0, reason_quotes: [], explanation: "No indicators of intent or risk to harm others. Caller's distress is focused on personal loss and internal pain." }
+                    },
+                    analytics: { response_time_sec: 12, handled_by: "Agent Michael" }
+                },
+                {
+                    call_id: "CALL-2025-003",
+                    started_at: "2025-10-15T20:15:00-07:00",
+                    ended_at: "2025-10-15T20:38:00-07:00",
+                    duration_sec: 1380,
+                    channel: "phone",
+                    language: "en",
+                    timezone: "America/Los_Angeles",
+                    caller_profile: {
+                        age_range: "28-32",
+                        gender: "female",
+                        notes: "Mother of two, employed"
+                    },
+                    turns: [
+                        { speaker: "responder", text: "Crisis hotline, this is Jennifer. How can I help you tonight?" },
+                        { speaker: "caller", text: "I need help. I think my husband is going to hurt me again." },
+                        { speaker: "responder", text: "I'm here to help you. Can you tell me what's happening? Are you safe right now?" },
+                        { speaker: "caller", text: "I'm in the bathroom with the door locked. He's been drinking and he's really angry about something at work. He's yelling and throwing things." },
+                        { speaker: "responder", text: "I'm glad you found a safe place to call. Are your children safe? Where are they right now?" },
+                        { speaker: "caller", text: "They're at my mom's house. I sent them there after dinner because I could tell he was getting angry." },
+                        { speaker: "responder", text: "That was very smart of you to protect your children. Can you tell me what happened the last time he hurt you?" },
+                        { speaker: "caller", text: "He pushed me down the stairs last month. I had bruises on my back and legs. I told people I fell, but I didn't fall." },
+                        { speaker: "responder", text: "That sounds terrifying and painful. You don't deserve to be treated that way. Have you thought about leaving before?" },
+                        { speaker: "caller", text: "I want to, but I'm scared. He says if I leave, he'll take the kids and I'll never see them again. He says the courts will believe him, not me." },
+                        { speaker: "responder", text: "That sounds like he's trying to control you with threats. The courts actually take domestic violence very seriously. Do you have any evidence of the abuse?" },
+                        { speaker: "caller", text: "I have photos of my bruises. And my neighbor saw him push me that time. She's willing to testify." },
+                        { speaker: "responder", text: "That's really important evidence. You're stronger than you think, and you have more support than you realize. Do you have somewhere safe you could go tonight?" },
+                        { speaker: "caller", text: "My mom would let me stay, but I'm afraid he'll come looking for me there." },
+                        { speaker: "responder", text: "There are domestic violence shelters that can keep your location confidential. Would you like me to connect you with local resources?" },
+                        { speaker: "caller", text: "Yes, but I'm so scared. What if he finds me?" },
+                        { speaker: "responder", text: "The shelters have security and protocols to keep survivors safe. They've helped thousands of people in situations like yours. You don't have to face this alone." },
+                        { speaker: "caller", text: "I think I'm ready to leave. But I don't know how to do it safely." },
+                        { speaker: "responder", text: "I can help you make a safety plan. The most important thing is to leave when he's not home. Do you know his schedule?" },
+                        { speaker: "caller", text: "He works construction, so he leaves around 6 AM and comes home around 4 PM. But sometimes he comes home early if work is slow." },
+                        { speaker: "responder", text: "That gives you a window. Here's what I suggest: Pack a bag with important documents, some clothes, and cash. Hide it somewhere he won't find it. Then leave tomorrow morning after he goes to work." },
+                        { speaker: "caller", text: "I can do that. I have some money saved that he doesn't know about." },
+                        { speaker: "responder", text: "Perfect. Now let me give you the number for the local domestic violence hotline. They can help you with everything - finding a shelter, legal help, counseling." },
+                        { speaker: "caller", text: "Thank you. I think I can do this. I have to, for my kids." },
+                        { speaker: "responder", text: "You're doing this for yourself too, and that's okay. You deserve to be safe and happy. Remember, you can always call us if you need support." }
+                    ],
+                    summary: {
+                        sections: {
+                            caller_profile: "28-year-old female, mother of two young children, employed, experiencing domestic violence from husband",
+                            presenting_problem: "Acute safety concern due to escalating domestic violence, husband intoxicated and threatening, caller barricaded in bathroom",
+                            context_timeline: "History of physical abuse including being pushed down stairs last month. Current episode triggered by husband's work stress and alcohol use. Children safely removed to grandmother's house",
+                            risk_factors: "History of physical violence, perpetrator intoxicated, escalating threats, isolation from support systems, financial dependence, threats regarding children",
+                            protective_factors: "Children safely removed, supportive mother, employment providing some independence, evidence of abuse (photos, witness), strong motivation to protect children",
+                            interventions: "Safety planning, validation of abuse experience, education about domestic violence resources, connection to local shelter and legal resources, development of escape plan",
+                            outcome: "Caller committed to leaving relationship, developed concrete safety plan, connected with domestic violence resources, demonstrated strong protective instincts for children",
+                            safety_plan: "Immediate: Stay in locked bathroom until husband calms down. Short-term: Execute escape plan tomorrow morning, contact domestic violence hotline, go to shelter or mother's house. Long-term: Pursue legal protection, establish independent living"
+                        },
+                        tone: "empathetic_professional"
+                    },
+                    risk: {
+                        suicide: { score: 1, reason_quotes: ["I don't know how to do this safely."], explanation: "Caller expressed hopelessness about situation but no direct suicidal ideation. Risk appears related to feeling trapped rather than self-harm intent." },
+                        homicide: { score: 0, reason_quotes: [], explanation: "No indicators of homicidal ideation or intent. Caller's focus is on self-protection and protecting children." },
+                        self_harm: { score: 0, reason_quotes: [], explanation: "No evidence of self-harm behaviors or ideation. Caller is actively seeking safety and protection." },
+                        harm_others: { score: 2, reason_quotes: ["I think my husband is going to hurt me again.", "He's been drinking and he's really angry about something at work. He's yelling and throwing things."], explanation: "Caller is at risk of being harmed by others (husband), not at risk of harming others. This represents victim risk rather than perpetrator risk." }
+                    },
+                    analytics: { response_time_sec: 8, handled_by: "Agent Jennifer" }
+                },
+                {
+                    call_id: "CALL-2025-004",
+                    started_at: "2025-10-15T11:45:00-07:00",
+                    ended_at: "2025-10-15T12:12:00-07:00",
+                    duration_sec: 1620,
+                    channel: "phone",
+                    language: "en",
+                    timezone: "America/Los_Angeles",
+                    caller_profile: {
+                        age_range: "22-25",
+                        gender: "female",
+                        notes: "College student, first panic attack"
+                    },
+                    turns: [
+                        { speaker: "responder", text: "Crisis hotline, this is David. How can I help you today?" },
+                        { speaker: "caller", text: "I think I'm having a heart attack. My chest hurts and I can't breathe." },
+                        { speaker: "responder", text: "I understand you're feeling really scared right now. Can you tell me what happened right before you started feeling this way?" },
+                        { speaker: "caller", text: "I was studying for my final exam tomorrow and suddenly I felt like I couldn't breathe. My heart is racing and I'm sweating." },
+                        { speaker: "responder", text: "It sounds like you might be having a panic attack, which can feel exactly like a heart attack. The good news is that panic attacks are not dangerous, even though they feel terrifying." },
+                        { speaker: "caller", text: "Are you sure? It feels so real. What if it really is a heart attack?" },
+                        { speaker: "responder", text: "Panic attacks can feel incredibly real and scary. But if you're young and healthy, and this started when you were studying for an exam, it's very likely a panic attack. Can you try some breathing with me?" },
+                        { speaker: "caller", text: "I don't think I can. I feel like I'm going to die." },
+                        { speaker: "responder", text: "You're not going to die. Panic attacks feel awful, but they always end. Let's try something simple - can you tell me what you see around you right now?" },
+                        { speaker: "caller", text: "I'm in my bedroom. I see my desk with my books, my bed, my window." },
+                        { speaker: "responder", text: "Good, that's helping. Now tell me what you hear." },
+                        { speaker: "caller", text: "I hear traffic outside, and my roommate is watching TV in the living room." },
+                        { speaker: "responder", text: "Perfect. You're grounding yourself. Now let's try some slow breathing. Breathe in for 4 counts, hold for 4, out for 4. Can you try that with me?" },
+                        { speaker: "caller", text: "Okay... 1, 2, 3, 4... hold... 1, 2, 3, 4... out... 1, 2, 3, 4." },
+                        { speaker: "responder", text: "That's great. How are you feeling now?" },
+                        { speaker: "caller", text: "A little better. My heart is still racing but I can breathe a bit easier." },
+                        { speaker: "responder", text: "That's progress. Panic attacks usually peak and then start to come down. You're doing really well. Is this your first panic attack?" },
+                        { speaker: "caller", text: "Yes. I've never felt anything like this before. I'm usually pretty calm." },
+                        { speaker: "responder", text: "First panic attacks often happen during stressful times, like exam periods. The important thing is that you now know what it feels like, so if it happens again, you'll know it's not dangerous." },
+                        { speaker: "caller", text: "What if it happens again during my exam tomorrow? I'm so worried about that." },
+                        { speaker: "responder", text: "That's a very common fear. But now you have tools - the grounding technique we just used, and the breathing. You can use these anywhere, even during an exam." },
+                        { speaker: "caller", text: "I'm still scared it will happen again." },
+                        { speaker: "responder", text: "That fear is normal. But remember - you just got through one, and you did it by staying calm and using coping skills. You're stronger than you think." },
+                        { speaker: "caller", text: "Thank you for helping me. I think I'm feeling better now." },
+                        { speaker: "responder", text: "I'm so glad I could help. Remember, if you have another panic attack, you can always call us back. And consider talking to your school's counseling center - they can help with anxiety management." },
+                        { speaker: "caller", text: "I will. Thank you for being so patient with me." },
+                        { speaker: "responder", text: "You were incredibly brave to call and work through this. Take care of yourself, and good luck on your exam tomorrow." }
+                    ],
+                    summary: {
+                        sections: {
+                            caller_profile: "22-year-old female college student experiencing first panic attack during exam preparation period",
+                            presenting_problem: "Acute panic attack with physical symptoms (chest pain, shortness of breath, racing heart) mistaken for heart attack",
+                            context_timeline: "Panic attack triggered by exam stress while studying for final exam. First-time experience with anxiety symptoms, no prior mental health history",
+                            risk_factors: "High academic stress, first-time panic experience causing fear and confusion, lack of anxiety management skills",
+                            protective_factors: "No prior mental health issues, good academic performance, supportive roommate, willingness to engage in coping strategies, no substance use",
+                            interventions: "Panic attack education and normalization, grounding techniques, breathing exercises, reassurance about safety, referral to campus counseling resources",
+                            outcome: "Panic attack resolved through grounding and breathing techniques, caller demonstrated improved understanding and coping skills, committed to accessing campus resources",
+                            safety_plan: "Use grounding and breathing techniques if panic recurs, contact campus counseling center for anxiety management resources, maintain regular sleep and study schedule"
+                        },
+                        tone: "empathetic_professional"
+                    },
+                    risk: {
+                        suicide: { score: 0, reason_quotes: [], explanation: "No suicidal ideation or intent. Caller's distress was focused on physical symptoms and exam anxiety." },
+                        homicide: { score: 0, reason_quotes: [], explanation: "No homicidal ideation or intent. Caller was experiencing internal anxiety symptoms only." },
+                        self_harm: { score: 0, reason_quotes: [], explanation: "No self-harm behaviors or ideation. Caller was seeking help for anxiety symptoms." },
+                        harm_others: { score: 0, reason_quotes: [], explanation: "No risk of harm to others. Caller was experiencing internal anxiety symptoms and seeking support." }
+                    },
+                    analytics: { response_time_sec: 25, handled_by: "Agent David" }
+                },
+                {
+                    call_id: "CALL-2025-005",
+                    started_at: "2025-10-15T19:00:00-07:00",
+                    ended_at: "2025-10-15T19:25:00-07:00",
+                    duration_sec: 1500,
+                    channel: "phone",
+                    language: "en",
+                    timezone: "America/Los_Angeles",
+                    caller_profile: {
+                        age_range: "35-40",
+                        gender: "male",
+                        notes: "Unemployed, alcohol dependence"
+                    },
+                    turns: [
+                        { speaker: "responder", text: "Crisis hotline, this is Lisa. How can I help you tonight?" },
+                        { speaker: "caller", text: "I'm drunk and I want to hurt myself. I lost my job again because of drinking." },
+                        { speaker: "responder", text: "I'm really glad you called before doing anything. Losing a job is devastating, and I can understand why you're feeling hopeless right now." },
+                        { speaker: "caller", text: "This is the third job I've lost. My wife left me, my kids won't talk to me. I'm a failure." },
+                        { speaker: "responder", text: "It sounds like you're going through an incredibly difficult time. But calling me shows that part of you wants to keep going. That's not the action of a failure." },
+                        { speaker: "caller", text: "I don't know how to stop drinking. I've tried so many times." },
+                        { speaker: "responder", text: "Addiction is a disease, not a moral failing. You've tried to stop, which shows you have the desire to change. That's a really important first step." },
+                        { speaker: "caller", text: "What's the point? I'll just fail again." },
+                        { speaker: "responder", text: "Recovery isn't linear. Many people try multiple times before it sticks. The important thing is that you keep trying. Have you ever been to treatment before?" },
+                        { speaker: "caller", text: "I went to AA meetings for a while, but I stopped going. I felt like I didn't belong there." },
+                        { speaker: "responder", text: "That's a common feeling. But AA is full of people who felt exactly like you do now. They've been where you are and found a way out." },
+                        { speaker: "caller", text: "Maybe I should try again. But I'm scared." },
+                        { speaker: "responder", text: "It's okay to be scared. Change is scary. But you don't have to do it alone. Would you like me to help you find some local resources?" },
+                        { speaker: "caller", text: "Yes, I think I'm ready to try again." },
+                        { speaker: "responder", text: "That's really brave of you. Let me give you some numbers for local treatment centers and AA meetings. You can start with just one meeting." },
+                        { speaker: "caller", text: "Thank you. I think I can do this." },
+                        { speaker: "responder", text: "I believe you can too. Remember, recovery is possible, and you're worth it. Call us anytime you need support." }
+                    ],
+                    summary: {
+                        sections: {
+                            caller_profile: "35-year-old male, unemployed due to alcohol dependence, separated from family due to addiction",
+                            presenting_problem: "Acute suicidal ideation triggered by job loss and family estrangement, currently intoxicated",
+                            context_timeline: "Lost third job due to alcohol use, wife left, children estranged, previous unsuccessful attempt at AA attendance",
+                            risk_factors: "Active suicidal ideation, alcohol intoxication, multiple job losses, family estrangement, previous failed recovery attempts, social isolation",
+                            protective_factors: "Willingness to call crisis line, previous attempt at treatment (AA), desire to change, intact cognitive functioning despite intoxication",
+                            interventions: "Safety planning, validation of pain while challenging self-blame, education about addiction as disease, connection to treatment resources, encouragement for recovery",
+                            outcome: "Caller committed to re-engaging with treatment, demonstrated hope and motivation, connected with local resources, agreed to safety plan",
+                            safety_plan: "Immediate: Stay safe tonight, avoid alcohol consumption. Short-term: Attend AA meeting within 48 hours, contact treatment center. Long-term: Engage in comprehensive addiction treatment program"
+                        },
+                        tone: "empathetic_professional"
+                    },
+                    risk: {
+                        suicide: { score: 3, reason_quotes: ["I want to hurt myself. I lost my job again because of drinking.", "What's the point? I'll just fail again."], explanation: "Caller expressed suicidal ideation while intoxicated, with feelings of hopelessness and failure. Risk elevated due to intoxication and multiple losses." },
+                        homicide: { score: 0, reason_quotes: [], explanation: "No homicidal ideation or intent. Caller's distress is self-directed." },
+                        self_harm: { score: 2, reason_quotes: ["I'm drunk and I want to hurt myself."], explanation: "Evidence of self-harm ideation while intoxicated, but caller reached out for help rather than acting on impulses." },
+                        harm_others: { score: 0, reason_quotes: [], explanation: "No risk of harm to others. Caller's distress is internally focused." }
+                    },
+                    analytics: { response_time_sec: 15, handled_by: "Agent Lisa" }
+                }
+            ],
+            analytics: {
+                total_calls: 10,
+                risk_distribution: { "0": 4, "1": 3, "2": 1, "3": 1, "4": 1, "5": 0 },
+                avg_response_time: 19.5
+            }
+        };
+
+        // Risk Badge Component
+        const RiskBadge = ({ score }) => {
+            let badgeClass, dotColor, label;
+            if (score <= 1) {
+                badgeClass = "bg-green-100 text-green-700";
+                dotColor = "bg-green-500";
+                label = "LOW";
+            } else if (score <= 3) {
+                badgeClass = "bg-yellow-100 text-yellow-700";
+                dotColor = "bg-yellow-400";
+                label = "MOD";
+            } else {
+                badgeClass = "bg-red-100 text-red-700";
+                dotColor = "bg-red-600";
+                label = "HIGH";
+            }
+
+            return (
+                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${badgeClass}`}>
+                    <div className={`w-2 h-2 rounded-full mr-1 ${dotColor}`}></div>
+                    {label}
+                </div>
+            );
+        };
+
+        // KPI Card Component
+        const KPICard = ({ label, value, subtitle }) => (
+            <div className="bg-white rounded-lg shadow-sm p-6 text-center hover:shadow-md transition-shadow">
+                <div className="text-3xl font-bold text-blue-600 font-poppins mb-2">{value}</div>
+                <div className="text-sm text-gray-600 font-medium">{label}</div>
+                {subtitle && <div className="text-xs text-gray-500 mt-1">{subtitle}</div>}
+            </div>
+        );
+
+        // Sidebar Component
+        const Sidebar = ({ selectedTab, onTabChange }) => (
+            <div className="w-64 bg-white shadow-sm border-r border-gray-200 h-screen fixed left-0 top-0 z-50">
+                <div className="p-6">
+                    <h2 className="text-lg font-semibold text-gray-800 font-poppins mb-6">EmpathZ</h2>
+                    
+                    <div className="space-y-2">
+                        <button
+                            onClick={() => onTabChange('dashboard')}
+                            className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${
+                                selectedTab === 'dashboard'
+                                    ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
+                                    : 'text-gray-700 hover:bg-gray-50'
+                            }`}
+                        >
+                            Dashboard
+                        </button>
+                        
+                        <button
+                            onClick={() => onTabChange('calls')}
+                            className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${
+                                selectedTab === 'calls'
+                                    ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
+                                    : 'text-gray-700 hover:bg-gray-50'
+                            }`}
+                        >
+                            Call Records
+                        </button>
+                    </div>
+                </div>
+                
+                <div className="absolute bottom-6 left-6 right-6">
+                    <div className="border-t border-gray-200 pt-4">
+                        <div className="text-center text-xs text-gray-500">
+                            EmpathZ Demo<br/>v1.0 (Complete)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // Dashboard Component
+        const Dashboard = ({ analytics }) => (
+            <div className="ml-64 p-8 h-screen flex flex-col">
+                <h1 className="text-2xl font-bold text-gray-800 font-poppins mb-8 flex-shrink-0">Dashboard</h1>
+                
+                {/* KPI Cards */}
+                <div className="grid grid-cols-3 gap-6 mb-8 flex-shrink-0">
+                    <KPICard 
+                        label="Today's Total Calls" 
+                        value={analytics.total_calls} 
+                    />
+                    <KPICard 
+                        label="Avg Response Time" 
+                        value={`${Math.round(analytics.avg_response_time)}s`} 
+                    />
+                    <KPICard 
+                        label="High Risk %" 
+                        value={`${Math.round(((analytics.risk_distribution[4] + analytics.risk_distribution[5]) / analytics.total_calls) * 100)}%`} 
+                    />
+                </div>
+
+                {/* Risk Distribution Chart */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 font-poppins mb-4">Risk Distribution — Today</h3>
+                    <div className="flex items-center space-x-6">
+                        <div className="relative w-32 h-32">
+                            <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
+                                {/* Low Risk (0-1) */}
+                                <path
+                                    className="text-green-500"
+                                    stroke="currentColor"
+                                    strokeWidth="3"
+                                    fill="transparent"
+                                    strokeDasharray={`${((analytics.risk_distribution[0] + analytics.risk_distribution[1]) / analytics.total_calls) * 100} ${100 - ((analytics.risk_distribution[0] + analytics.risk_distribution[1]) / analytics.total_calls) * 100}`}
+                                    strokeDashoffset="0"
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                                {/* Moderate Risk (2-3) */}
+                                <path
+                                    className="text-yellow-400"
+                                    stroke="currentColor"
+                                    strokeWidth="3"
+                                    fill="transparent"
+                                    strokeDasharray={`${((analytics.risk_distribution[2] + analytics.risk_distribution[3]) / analytics.total_calls) * 100} ${100 - ((analytics.risk_distribution[2] + analytics.risk_distribution[3]) / analytics.total_calls) * 100}`}
+                                    strokeDashoffset={`-${((analytics.risk_distribution[0] + analytics.risk_distribution[1]) / analytics.total_calls) * 100}`}
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                                {/* High Risk (4-5) */}
+                                <path
+                                    className="text-red-600"
+                                    stroke="currentColor"
+                                    strokeWidth="3"
+                                    fill="transparent"
+                                    strokeDasharray={`${((analytics.risk_distribution[4] + analytics.risk_distribution[5]) / analytics.total_calls) * 100} ${100 - ((analytics.risk_distribution[4] + analytics.risk_distribution[5]) / analytics.total_calls) * 100}`}
+                                    strokeDashoffset={`-${((analytics.risk_distribution[0] + analytics.risk_distribution[1]) / analytics.total_calls) * 100 + ((analytics.risk_distribution[2] + analytics.risk_distribution[3]) / analytics.total_calls) * 100}`}
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                            </svg>
+                            {/* Center text with high risk percentage */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-red-600 font-poppins">
+                                        {Math.round(((analytics.risk_distribution[4] + analytics.risk_distribution[5]) / analytics.total_calls) * 100)}%
+                                    </div>
+                                    <div className="text-xs text-gray-600 font-medium">High Risk</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Legend */}
+                        <div className="flex-1 space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span className="text-sm text-gray-700">
+                                    Low Risk: {analytics.risk_distribution[0] + analytics.risk_distribution[1]} calls ({Math.round(((analytics.risk_distribution[0] + analytics.risk_distribution[1]) / analytics.total_calls) * 100)}%)
+                                </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                                <span className="text-sm text-gray-700">
+                                    Moderate Risk: {analytics.risk_distribution[2] + analytics.risk_distribution[3]} calls ({Math.round(((analytics.risk_distribution[2] + analytics.risk_distribution[3]) / analytics.total_calls) * 100)}%)
+                                </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                                <span className="text-sm text-gray-700">
+                                    High Risk: {analytics.risk_distribution[4] + analytics.risk_distribution[5]} calls ({Math.round(((analytics.risk_distribution[4] + analytics.risk_distribution[5]) / analytics.total_calls) * 100)}%)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // Call List Item Component
+        const CallListItem = ({ call, isSelected, onClick }) => {
+            const maxRisk = Math.max(
+                call.risk.suicide.score,
+                call.risk.homicide.score,
+                call.risk.self_harm.score,
+                call.risk.harm_others.score
+            );
+            
+            const subject = call.summary.sections.presenting_problem || "No summary available";
+            const truncatedSubject = subject.length > 80 ? subject.substring(0, 80) + "..." : subject;
+            const time = new Date(call.started_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+            return (
+                <div 
+                    className={`p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors ${
+                        isSelected ? 'bg-gray-100 border-l-4 border-blue-600' : ''
+                    }`}
+                    onClick={onClick}
+                >
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                            <div className="font-semibold text-gray-900 text-sm">{call.call_id}</div>
+                            <div className="text-gray-700 text-sm mt-1">{truncatedSubject}</div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                            <div className="text-xs text-gray-500">{time}</div>
+                            <RiskBadge score={maxRisk} />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Call Detail Component
+        const CallDetail = ({ call }) => {
+            const maxRisk = Math.max(
+                call.risk.suicide.score,
+                call.risk.homicide.score,
+                call.risk.self_harm.score,
+                call.risk.harm_others.score
+            );
+
+            return (
+                <div className="bg-white rounded-lg shadow-sm p-6 h-full flex flex-col">
+                    {/* High Risk Alert */}
+                    {maxRisk >= 4 && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex-shrink-0">
+                            <div className="text-red-700 font-semibold text-center">
+                                HIGH RISK – ESCALATE TO SUPERVISOR
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
+                        {/* Transcript */}
+                        <div className="flex flex-col min-h-0">
+                            <h3 className="text-lg font-semibold text-gray-800 font-poppins mb-4 flex-shrink-0">Call Transcript</h3>
+                            <div className="overflow-y-auto bg-gray-50 rounded-lg p-4" style={{height: '800px', scrollbarWidth: 'thin', scrollbarColor: '#9CA3AF #F3F4F6'}}>
+                                <style dangerouslySetInnerHTML={{
+                                    __html: `
+                                        .transcript-scroll::-webkit-scrollbar {
+                                            width: 8px;
+                                        }
+                                        .transcript-scroll::-webkit-scrollbar-track {
+                                            background: #F3F4F6;
+                                            border-radius: 4px;
+                                        }
+                                        .transcript-scroll::-webkit-scrollbar-thumb {
+                                            background: #9CA3AF;
+                                            border-radius: 4px;
+                                        }
+                                        .transcript-scroll::-webkit-scrollbar-thumb:hover {
+                                            background: #6B7280;
+                                        }
+                                    `
+                                }} />
+                                <div className="space-y-4 transcript-scroll">
+                                    {call.turns.map((turn, index) => (
+                                        <div key={index} className={`flex ${turn.speaker === 'caller' ? 'justify-start' : 'justify-end'}`}>
+                                            <div className={`max-w-xs p-3 rounded-lg ${
+                                                turn.speaker === 'caller' 
+                                                    ? 'bg-white text-gray-800 shadow-sm border border-gray-200' 
+                                                    : 'bg-blue-600 text-white'
+                                            }`}>
+                                                <div className="text-xs font-medium opacity-80 mb-1">
+                                                    {turn.speaker === 'caller' ? 'Caller' : 'Responder'}
+                                                </div>
+                                                <div className="text-sm">{turn.text}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* AI Analysis */}
+                        <div className="flex flex-col min-h-0">
+                            <div className="flex justify-between items-center mb-4 flex-shrink-0">
+                                <h3 className="text-lg font-semibold text-gray-800 font-poppins">AI Analysis</h3>
+                                <div className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium">
+                                    PDF Report Available
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-6 flex-1 overflow-y-auto" style={{scrollbarWidth: 'thin', scrollbarColor: '#9CA3AF #F3F4F6'}}>
+                                <style dangerouslySetInnerHTML={{
+                                    __html: `
+                                        .space-y-6::-webkit-scrollbar {
+                                            width: 8px;
+                                        }
+                                        .space-y-6::-webkit-scrollbar-track {
+                                            background: #F3F4F6;
+                                            border-radius: 4px;
+                                        }
+                                        .space-y-6::-webkit-scrollbar-thumb {
+                                            background: #9CA3AF;
+                                            border-radius: 4px;
+                                        }
+                                        .space-y-6::-webkit-scrollbar-thumb:hover {
+                                            background: #6B7280;
+                                        }
+                                    `
+                                }} />
+                                {/* Case Summary */}
+                                <div>
+                                    <h4 className="font-semibold text-gray-800 mb-2">Case Summary</h4>
+                                    <div className="text-sm text-gray-700 space-y-2">
+                                        {Object.entries(call.summary.sections).map(([key, value]) => (
+                                            <div key={key}>
+                                                <span className="font-medium capitalize">{key.replace('_', ' ')}:</span> {value}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Risk Assessment */}
+                                <div>
+                                    <h4 className="font-semibold text-gray-800 mb-2">Risk Assessment</h4>
+                                    <div className="space-y-3">
+                                        {Object.entries(call.risk).map(([dimension, data]) => (
+                                            <div key={dimension}>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="text-sm font-medium capitalize">{dimension.replace('_', ' ')}</span>
+                                                    <span className="text-sm text-gray-600">Score: {data.score}/5</span>
+                                                </div>
+                                                <div className="flex space-x-1">
+                                                    {[1, 2, 3, 4, 5].map(i => (
+                                                        <div 
+                                                            key={i}
+                                                            className={`h-2 flex-1 rounded ${
+                                                                i <= data.score 
+                                                                    ? i <= 1 ? 'bg-green-500' : i <= 3 ? 'bg-yellow-400' : 'bg-red-600'
+                                                                    : 'bg-gray-200'
+                                                            }`}
+                                                        ></div>
+                                                    ))}
+                                                </div>
+                                                <div className="text-xs text-gray-600 mt-1">{data.explanation}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Call Records Component
+        const CallRecords = ({ calls, selectedCallId, onCallSelect }) => (
+            <div className="ml-64 p-8 h-screen flex flex-col">
+                <h1 className="text-2xl font-bold text-gray-800 font-poppins mb-8 flex-shrink-0">Call Records</h1>
+                
+                <div className="grid grid-cols-5 gap-6 flex-1 min-h-0">
+                    {/* Call List */}
+                    <div className="col-span-2 flex flex-col">
+                        <div className="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col h-full">
+                            <div className="p-4 border-b border-gray-200 flex-shrink-0">
+                                <h3 className="font-semibold text-gray-800">Recent Calls</h3>
+                            </div>
+                            <div className="flex-1 overflow-y-auto" style={{scrollbarWidth: 'thin', scrollbarColor: '#9CA3AF #F3F4F6'}}>
+                                <style dangerouslySetInnerHTML={{
+                                    __html: `
+                                        .flex-1::-webkit-scrollbar {
+                                            width: 8px;
+                                        }
+                                        .flex-1::-webkit-scrollbar-track {
+                                            background: #F3F4F6;
+                                            border-radius: 4px;
+                                        }
+                                        .flex-1::-webkit-scrollbar-thumb {
+                                            background: #9CA3AF;
+                                            border-radius: 4px;
+                                        }
+                                        .flex-1::-webkit-scrollbar-thumb:hover {
+                                            background: #6B7280;
+                                        }
+                                    `
+                                }} />
+                                {calls.map(call => (
+                                    <CallListItem
+                                        key={call.call_id}
+                                        call={call}
+                                        isSelected={selectedCallId === call.call_id}
+                                        onClick={() => onCallSelect(call.call_id)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Call Detail */}
+                    <div className="col-span-3 flex flex-col">
+                        {selectedCallId ? (
+                            <div className="flex-1 min-h-0">
+                                <CallDetail call={calls.find(c => c.call_id === selectedCallId)} />
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-lg shadow-sm p-8 text-center flex-1 flex items-center justify-center">
+                                <div className="text-gray-500">
+                                    Select a call from the list to view details
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+
+        // Main App Component
+        const App = () => {
+            const [selectedTab, setSelectedTab] = useState('dashboard');
+            const [calls, setCalls] = useState(completeData.calls);
+            const [analytics, setAnalytics] = useState(completeData.analytics);
+            const [selectedCallId, setSelectedCallId] = useState(null);
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    <Sidebar selectedTab={selectedTab} onTabChange={setSelectedTab} />
+                    
+                    {selectedTab === 'dashboard' && (
+                        <Dashboard analytics={analytics} />
+                    )}
+                    
+                    {selectedTab === 'calls' && (
+                        <CallRecords 
+                            calls={calls} 
+                            selectedCallId={selectedCallId}
+                            onCallSelect={setSelectedCallId}
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        // Render the app
+        try {
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<App />);
+        } catch (e) {
+            ReactDOM.render(<App />, document.getElementById('root'));
+        }
+    </script>
+</body>
+</html>
