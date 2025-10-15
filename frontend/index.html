@@ -22,9 +22,9 @@
         const { useState, useEffect } = React;
 
         // API Service
-        const API_BASE = process.env.NODE_ENV === 'production' 
-            ? '/api'  // Use relative path in production (Vercel handles routing)
-            : 'http://localhost:8000/api';  // Use localhost in development
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000/api'  // Use localhost in development
+            : '/api';  // Use relative path in production (Vercel handles routing)
         
         const apiService = {
             async getCalls() {
