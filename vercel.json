@@ -9,7 +9,7 @@
       }
     },
     {
-      "src": "frontend/index.html",
+      "src": "frontend/**",
       "use": "@vercel/static"
     }
   ],
@@ -17,6 +17,10 @@
     {
       "src": "/api/(.*)",
       "dest": "/backend/main.py"
+    },
+    {
+      "src": "/",
+      "dest": "/frontend/index.html"
     },
     {
       "src": "/(.*)",
