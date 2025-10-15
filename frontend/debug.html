@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - EmpathZ AI Coordinator</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Debug Page</h1>
+    <div id="status"></div>
+    <div id="data"></div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000/api'  
+            : '/api';
+        
+        document.getElementById('status').innerHTML = `<p>API_BASE: ${API_BASE}</p>`;
+        
+        async function testAPI() {
+            try {
+                console.log('Testing API:', API_BASE);
+                const response = await axios.get(`${API_BASE}/calls`);
+                document.getElementById('data').innerHTML = `<p>API Response: ${JSON.stringify(response.data).substring(0, 200)}...</p>`;
+                console.log('API Response:', response.data);
+            } catch (error) {
+                document.getElementById('data').innerHTML = `<p>API Error: ${error.message}</p>`;
+                console.error('API Error:', error);
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>

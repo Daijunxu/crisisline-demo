@@ -522,7 +522,13 @@
         };
 
         // Render the app
-        ReactDOM.render(<App />, document.getElementById('root'));
+        try {
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<App />);
+        } catch (e) {
+            // Fallback for older React versions
+            ReactDOM.render(<App />, document.getElementById('root'));
+        }
     </script>
 </body>
 </html>
