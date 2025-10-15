@@ -27,6 +27,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000", 
+        "http://localhost:3001",
+        "http://localhost:3002",
         "http://localhost:5173",
         "https://*.vercel.app",  # Vercel preview deployments
         "https://empathz-demo.vercel.app"  # Production domain
