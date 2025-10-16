@@ -5,15 +5,13 @@ Serves REST API endpoints for crisis hotline call analysis
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 import tempfile
 import os
 from typing import List, Dict, Any
 
-from api.routes import router
 from data_demo import load_all_calls
-from logic.analytics import compute_analytics
-from logic.pdf_report import generate_pdf_report, create_download_filename
+from logic.pdf_report import generate_call_report, get_report_filename
 
 # Create FastAPI app
 app = FastAPI(
@@ -39,9 +37,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API routes
-app.include_router(router)
-
 # Load all calls at startup
 calls_data = load_all_calls()
 
@@ -66,8 +61,32 @@ async def get_call(call_id: str):
 @app.get("/api/analytics")
 async def get_analytics():
     """Get dashboard analytics"""
-    analytics = compute_analytics(calls_data)
-    return analytics
+    # Simple analytics computation
+    total_calls = len(calls_data)
+    risk_distribution = {"0": 0, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0}
+    total_response_time = 0
+    
+    for call in calls_data:
+        max_risk = 0
+        if 'risk' in call:
+            max_risk = max(
+                call['risk'].get('suicide', {}).get('score', 0),
+                call['risk'].get('homicide', {}).get('score', 0),
+                call['risk'].get('self_harm', {}).get('score', 0),
+                call['risk'].get('harm_others', {}).get('score', 0)
+            )
+        risk_distribution[str(max_risk)] += 1
+        
+        if 'analytics' in call and 'response_time_sec' in call['analytics']:
+            total_response_time += call['analytics']['response_time_sec']
+    
+    avg_response_time = total_response_time / total_calls if total_calls > 0 else 0
+    
+    return {
+        "total_calls": total_calls,
+        "risk_distribution": risk_distribution,
+        "avg_response_time": avg_response_time
+    }
 
 @app.get("/api/calls/{call_id}/pdf")
 async def download_pdf(call_id: str):
@@ -78,15 +97,13 @@ async def download_pdf(call_id: str):
     
     try:
         # Generate PDF
-        filename = create_download_filename(call)
-        temp_path = os.path.join(tempfile.gettempdir(), filename)
+        pdf_content = generate_call_report(call)
+        filename = get_report_filename(call_id)
         
-        pdf_path = generate_pdf_report(call, temp_path)
-        
-        return FileResponse(
-            path=pdf_path,
-            filename=filename,
-            media_type="application/pdf"
+        return Response(
+            content=pdf_content,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")

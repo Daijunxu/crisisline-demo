@@ -615,9 +615,12 @@
                         <div className="flex flex-col min-h-0">
                             <div className="flex justify-between items-center mb-4 flex-shrink-0">
                                 <h3 className="text-lg font-semibold text-gray-800 font-poppins">AI Analysis</h3>
-                                <div className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium">
-                                    PDF Report Available
-                                </div>
+                                <button 
+                                    onClick={() => downloadReport(call.call_id)}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer"
+                                >
+                                    Download Report
+                                </button>
                             </div>
                             
                             <div className="space-y-6 flex-1 overflow-y-auto" style={{scrollbarWidth: 'thin', scrollbarColor: '#9CA3AF #F3F4F6'}}>
@@ -745,6 +748,62 @@
                 </div>
             </div>
         );
+
+        // Download Report Function
+        const downloadReport = async (callId) => {
+            try {
+                // For the static version, we'll create a simple download
+                const call = completeData.calls.find(c => c.call_id === callId);
+                if (!call) return;
+                
+                // Create a simple text report
+                let reportContent = `EmpathZ AI Coordinator - Crisis Hotline Call Report\n`;
+                reportContent += `===============================================\n\n`;
+                reportContent += `Call ID: ${call.call_id}\n`;
+                reportContent += `Date: ${call.started_at}\n`;
+                reportContent += `Duration: ${Math.floor(call.duration_sec / 60)} minutes ${call.duration_sec % 60} seconds\n\n`;
+                
+                // Add case summary
+                if (call.summary && call.summary.sections) {
+                    reportContent += `CASE SUMMARY\n`;
+                    reportContent += `------------\n`;
+                    Object.entries(call.summary.sections).forEach(([key, value]) => {
+                        if (value) {
+                            const title = key.replace('_', ' ').toUpperCase();
+                            reportContent += `${title}: ${value}\n\n`;
+                        }
+                    });
+                }
+                
+                // Add risk assessment
+                if (call.risk) {
+                    reportContent += `RISK ASSESSMENT\n`;
+                    reportContent += `---------------\n`;
+                    Object.entries(call.risk).forEach(([riskType, data]) => {
+                        const title = riskType.replace('_', ' ').toUpperCase();
+                        reportContent += `${title}: Score ${data.score}/5\n`;
+                        if (data.explanation) {
+                            reportContent += `Explanation: ${data.explanation}\n\n`;
+                        }
+                    });
+                }
+                
+                // Create and download file
+                const blob = new Blob([reportContent], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `EmpathZ_CaseReport_${callId}_${new Date().toISOString().slice(0, 10)}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+            } catch (error) {
+                console.error('Error downloading report:', error);
+                alert('Error generating report. Please try again.');
+            }
+        };
 
         // Main App Component
         const App = () => {
