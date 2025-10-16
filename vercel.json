@@ -1,14 +1,14 @@
 {
   "version": 2,
   "functions": {
-    "api/calls/[call_id]/pdf.py": {
+    "api/pdf.py": {
       "runtime": "python3.9"
     }
   },
   "routes": [
     {
-      "src": "/api/calls/([^/]+)/pdf",
-      "dest": "/api/calls/$1/pdf.py"
+      "src": "/api/pdf",
+      "dest": "/api/pdf.py"
     },
     {
       "src": "/",

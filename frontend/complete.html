@@ -9,7 +9,6 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         .font-poppins { font-family: 'Poppins', sans-serif; }
@@ -753,12 +752,8 @@
         // Download Report Function
         const downloadReport = async (callId) => {
             try {
-                // Try to download PDF from API first
-                const apiBase = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:8000/api' 
-                    : '/api';
-                
-                const response = await fetch(`${apiBase}/calls/${callId}/pdf`);
+                // Try to download PDF from API
+                const response = await fetch('/api/pdf');
                 
                 if (response.ok) {
                     // Download PDF
@@ -776,208 +771,11 @@
                 }
                 
             } catch (error) {
-                console.log('API not available, generating client-side PDF');
-                
-                // Generate PDF client-side using jsPDF
-                const call = completeData.calls.find(c => c.call_id === callId);
-                if (!call) return;
-                
-                generateClientSidePDF(call);
+                console.error('PDF generation failed:', error);
+                alert('PDF generation is currently unavailable. Please try again later or contact support.');
             }
         };
 
-        // Client-side PDF Generation
-        const generateClientSidePDF = (call) => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // Set up fonts and colors
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(30, 64, 175); // Blue color
-            
-            // Header
-            doc.setFontSize(24);
-            doc.text('EmpathZ for Crisis Hotline', 105, 30, { align: 'center' });
-            
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(16);
-            doc.text('AI-Generated Case Report', 105, 45, { align: 'center' });
-            
-            // Call ID and Date
-            doc.setFontSize(14);
-            const callDate = new Date(call.started_at).toLocaleDateString('en-US', { 
-                year: 'numeric', month: 'long', day: 'numeric' 
-            });
-            doc.text(`Call ID: ${call.call_id} | Date: ${callDate}`, 105, 65, { align: 'center' });
-            
-            let yPos = 85;
-            
-            // Call Information Section
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(16);
-            doc.text('Call Information', 20, yPos);
-            yPos += 20;
-            
-            const durationMin = Math.floor(call.duration_sec / 60);
-            const durationSec = call.duration_sec % 60;
-            const durationStr = `${durationMin.toString().padStart(2, '0')}:${durationSec.toString().padStart(2, '0')}`;
-            
-            const startTime = new Date(call.started_at).toLocaleTimeString('en-US', { 
-                hour: 'numeric', minute: '2-digit', hour12: true 
-            });
-            const endTime = new Date(new Date(call.started_at).getTime() + call.duration_sec * 1000)
-                .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            
-            const profile = call.caller_profile || {};
-            const analytics = call.analytics || {};
-            
-            const callInfo = [
-                ['Call Duration:', durationStr],
-                ['Start Time:', startTime],
-                ['End Time:', endTime],
-                ['Channel:', call.channel.charAt(0).toUpperCase() + call.channel.slice(1)],
-                ['Age Range:', profile.age_range || 'Not specified'],
-                ['Gender:', profile.gender ? profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1) : 'Not specified'],
-                ['Handled By:', analytics.handled_by || 'Not specified']
-            ];
-            
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(11);
-            
-            callInfo.forEach(([label, value]) => {
-                doc.setFont('helvetica', 'bold');
-                doc.text(label, 20, yPos);
-                doc.setFont('helvetica', 'normal');
-                doc.text(value, 80, yPos);
-                yPos += 8;
-            });
-            
-            yPos += 15;
-            
-            // Case Summary Section
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(16);
-            doc.text('Case Summary', 20, yPos);
-            yPos += 20;
-            
-            if (call.summary && call.summary.sections) {
-                const sections = call.summary.sections;
-                const sectionOrder = [
-                    ['caller_profile', 'Caller Profile'],
-                    ['presenting_problem', 'Presenting Problem'],
-                    ['context_timeline', 'Context & Timeline'],
-                    ['risk_factors', 'Risk Factors'],
-                    ['protective_factors', 'Protective Factors'],
-                    ['interventions', 'Interventions Provided'],
-                    ['outcome', 'Outcome'],
-                    ['safety_plan', 'Safety Plan & Referrals']
-                ];
-                
-                doc.setFontSize(12);
-                
-                sectionOrder.forEach(([key, title]) => {
-                    if (sections[key]) {
-                        doc.setFont('helvetica', 'bold');
-                        doc.text(title, 20, yPos);
-                        yPos += 8;
-                        
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(11);
-                        
-                        if (key === 'risk_factors' || key === 'protective_factors') {
-                            const items = sections[key].split(', ');
-                            items.forEach(item => {
-                                if (item.trim()) {
-                                    doc.text(`• ${item.trim()}`, 20, yPos);
-                                    yPos += 6;
-                                }
-                            });
-                        } else {
-                            const lines = doc.splitTextToSize(sections[key], 170);
-                            doc.text(lines, 20, yPos);
-                            yPos += lines.length * 5 + 5;
-                        }
-                        
-                        yPos += 5;
-                    }
-                });
-            }
-            
-            yPos += 15;
-            
-            // Risk Assessment Section
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(16);
-            doc.text('Risk Assessment', 20, yPos);
-            yPos += 20;
-            
-            if (call.risk) {
-                const riskTypes = {
-                    'suicide': 'Suicide Risk',
-                    'homicide': 'Homicide Risk',
-                    'self_harm': 'Self-Harm Risk',
-                    'harm_others': 'Harm to Others'
-                };
-                
-                doc.setFontSize(12);
-                
-                Object.entries(call.risk).forEach(([riskType, data]) => {
-                    if (riskTypes[riskType]) {
-                        doc.setFont('helvetica', 'bold');
-                        doc.text(`${riskTypes[riskType]}: ${data.score}/5`, 20, yPos);
-                        yPos += 8;
-                        
-                        // Draw simple risk bar
-                        const barWidth = 40;
-                        const filledWidth = (data.score / 5) * barWidth;
-                        doc.setDrawColor(255, 107, 53); // Orange
-                        doc.setFillColor(255, 107, 53);
-                        doc.rect(20, yPos - 2, filledWidth, 6, 'F');
-                        doc.setDrawColor(229, 229, 229); // Gray
-                        doc.setFillColor(229, 229, 229);
-                        doc.rect(20 + filledWidth, yPos - 2, barWidth - filledWidth, 6, 'F');
-                        yPos += 15;
-                        
-                        // Risk explanation
-                        if (data.explanation) {
-                            doc.setFont('helvetica', 'normal');
-                            doc.setFontSize(11);
-                            const lines = doc.splitTextToSize(data.explanation, 170);
-                            doc.text(lines, 20, yPos);
-                            yPos += lines.length * 5 + 5;
-                        }
-                        
-                        // Risk quotes
-                        if (data.reason_quotes && data.reason_quotes.length > 0) {
-                            data.reason_quotes.forEach(quote => {
-                                if (quote.trim()) {
-                                    doc.setFont('helvetica', 'italic');
-                                    doc.setFontSize(10);
-                                    const quoteText = `"${quote.trim()}"`;
-                                    const quoteLines = doc.splitTextToSize(quoteText, 160);
-                                    doc.text(quoteLines, 30, yPos);
-                                    yPos += quoteLines.length * 4 + 3;
-                                }
-                            });
-                        }
-                        
-                        yPos += 10;
-                    }
-                });
-            }
-            
-            // Disclaimer
-            yPos += 20;
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            doc.setTextColor(102, 102, 102);
-            const disclaimer = "DISCLAIMER: This report was generated using AI technology for demonstration purposes. This is not real patient data and should not be used for clinical decision-making. © 2025 EmpathZ Demo v1.0";
-            doc.text(disclaimer, 105, yPos, { align: 'center' });
-            
-            // Save the PDF
-            doc.save(`EmpathZ_CaseReport_${call.call_id}_${new Date().toISOString().slice(0, 10)}.pdf`);
-        };
 
         // Main App Component
         const App = () => {
