@@ -752,7 +752,32 @@
         // Download Report Function
         const downloadReport = async (callId) => {
             try {
-                // For the static version, we'll create a simple download
+                // Try to download PDF from API first
+                const apiBase = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8000/api' 
+                    : '/api';
+                
+                const response = await fetch(`${apiBase}/calls/${callId}/pdf`);
+                
+                if (response.ok) {
+                    // Download PDF
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `EmpathZ_CaseReport_${callId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    throw new Error('API not available');
+                }
+                
+            } catch (error) {
+                console.log('API not available, falling back to text report');
+                
+                // Fallback to text report if API is not available
                 const call = completeData.calls.find(c => c.call_id === callId);
                 if (!call) return;
                 
@@ -798,10 +823,6 @@
                 a.click();
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
-                
-            } catch (error) {
-                console.error('Error downloading report:', error);
-                alert('Error generating report. Please try again.');
             }
         };
 
