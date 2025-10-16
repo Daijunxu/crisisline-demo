@@ -1,19 +1,6 @@
 {
   "version": 2,
-  "functions": {
-    "api/pdf.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "routes": [
-    {
-      "src": "/api/test",
-      "dest": "/api/test.js"
-    },
-    {
-      "src": "/api/pdf",
-      "dest": "/api/pdf.js"
-    },
     {
       "src": "/",
       "dest": "/frontend/complete.html"
