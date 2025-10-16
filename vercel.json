@@ -1,14 +1,14 @@
 {
   "version": 2,
   "functions": {
-    "api/pdf.py": {
-      "runtime": "python3.9"
+    "api/pdf.js": {
+      "runtime": "nodejs18.x"
     }
   },
   "routes": [
     {
       "src": "/api/pdf",
-      "dest": "/api/pdf.py"
+      "dest": "/api/pdf.js"
     },
     {
       "src": "/",
