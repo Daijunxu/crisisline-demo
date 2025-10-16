@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "EmpathZ AI Coordinator - Crisis Hotline Call Analysis",
   "scripts": {
-    "dev": "concurrently \"cd backend && uvicorn main:app --reload --port 8000\" \"cd frontend && python3 -m http.server 3000\"",
+    "dev": "cd frontend && python3 -m http.server 3000",
     "build": "echo 'Frontend is already built (single HTML file)'",
     "deploy": "vercel --prod",
     "preview": "vercel"
